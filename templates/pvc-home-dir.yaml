@@ -1,0 +1,17 @@
+{{- if and .Values.persistence.enabled .Values.persistence.homeDir.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "nixos-server.fullname" . }}-home-dir
+  labels:
+    {{- include "nixos-server.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.persistence.homeDir.storageClass }}
+  storageClassName: {{ .Values.persistence.homeDir.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.homeDir.size }}
+{{- end }}

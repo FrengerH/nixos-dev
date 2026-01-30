@@ -1,0 +1,17 @@
+{{- if and .Values.persistence.enabled .Values.persistence.nixStore.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "nixos-server.fullname" . }}-nix-store
+  labels:
+    {{- include "nixos-server.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.persistence.nixStore.storageClass }}
+  storageClassName: {{ .Values.persistence.nixStore.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.nixStore.size }}
+{{- end }}

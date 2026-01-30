@@ -1,0 +1,26 @@
+# Example values file for NixOS server
+
+# SSH with password (not recommended for production)
+ssh:
+  password: "example-password"
+
+# SSH with public keys (recommended)
+# ssh:
+#   password: ""
+#   authorizedKeys:
+#     - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC..."
+
+# Use NodePort instead of LoadBalancer
+# service:
+#   type: NodePort
+
+# Use specific storage class
+# persistence:
+#   nixStore:
+#     storageClass: fast-ssd
+#   homeDir:
+#     storageClass: standard
+
+# Disable persistence
+# persistence:
+#   enabled: false

@@ -1,0 +1,67 @@
+image:
+  repository: nixos/nix
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+podAnnotations: {}
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+ssh:
+  enabled: true
+  port: 22
+  username: nix
+  password: ""  # Leave empty to use SSH keys only
+  authorizedKeys: []  # List of SSH public keys
+
+service:
+  type: LoadBalancer  # Options: LoadBalancer, NodePort, ClusterIP
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: nixos.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+env: []
+
+persistence:
+  enabled: true
+  nixStore:
+    enabled: true
+    mountPath: /nix
+    size: 10Gi
+    storageClass: ""
+  homeDir:
+    enabled: true
+    mountPath: /home/nix
+    size: 5Gi
+    storageClass: ""

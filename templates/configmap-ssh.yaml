@@ -1,0 +1,43 @@
+{{- if .Values.ssh.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "nixos-server.fullname" . }}-ssh-config
+  labels:
+    {{- include "nixos-server.labels" . | nindent 4 }}
+data:
+  start-ssh.sh: |
+    #!/bin/sh
+    set -e
+
+    apk add --no-cache openssh-server
+
+    mkdir -p /run/sshd
+
+    if [ -n "{{ .Values.ssh.username }}" ]; then
+      if ! id -u {{ .Values.ssh.username }} >/dev/null 2>&1; then
+        useradd -m -s /bin/sh {{ .Values.ssh.username }}
+      fi
+    fi
+
+    if [ -n "{{ .Values.ssh.password }}" ]; then
+      echo "{{ .Values.ssh.username }}:{{ .Values.ssh.password }}" | chpasswd
+      sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+      sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+    else
+      sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+      sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+    fi
+
+    {{- range .Values.ssh.authorizedKeys }}
+    mkdir -p /home/{{ $.Values.ssh.username }}/.ssh
+    echo "{{ . }}" >> /home/{{ $.Values.ssh.username }}/.ssh/authorized_keys
+    {{- end }}
+
+    chown -R {{ .Values.ssh.username }}:{{ .Values.ssh.username }} /home/{{ .Values.ssh.username }}/.ssh
+    chmod 700 /home/{{ .Values.ssh.username }}/.ssh
+    chmod 600 /home/{{ .Values.ssh.username }}/.ssh/authorized_keys
+
+    echo "SSH server starting on port {{ .Values.ssh.port }}..."
+    /usr/sbin/sshd -D -p {{ .Values.ssh.port }}
+{{- end }}

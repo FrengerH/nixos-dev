@@ -1,0 +1,24 @@
+{{- if .Values.ssh.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "nixos-server.fullname" . }}
+  labels:
+    {{- include "nixos-server.labels" . | nindent 4 }}
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.ssh.port }}
+      targetPort: ssh
+      protocol: TCP
+      name: ssh
+      {{- if and (eq .Values.service.type "NodePort") .Values.ssh.nodePort }}
+      nodePort: {{ .Values.ssh.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "nixos-server.selectorLabels" . | nindent 4 }}
+{{- end }}
