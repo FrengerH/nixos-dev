@@ -54,7 +54,7 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         {{- if .Values.ssh.enabled }}
         command:
-          - /bin/sh
+          - /nix/var/nix/profiles/default/bin/sh
           - -c
           - "export SSH_PORT={{ .Values.ssh.port }} && export SSH_USERNAME={{ .Values.ssh.username }} && export SSH_PASSWORD_AUTH={{ if .Values.ssh.password }}yes{{ else }}no{{ end }} && export SSH_AUTHORIZED_KEYS='{{ range $i, $key := .Values.ssh.authorizedKeys }}{{ if $i }} {{ end }}{{ $key }}{{ end }}' && cd /home/{{ .Values.ssh.username }}/.config/ssh-flake && exec nix run"
         {{- else }}
