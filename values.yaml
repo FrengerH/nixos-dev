@@ -1,4 +1,4 @@
-# Container image configuration
+# NixOS Server Helm Chart Configuration
 image:
   repository: nixos/nix
   tag: latest
