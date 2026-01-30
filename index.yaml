@@ -3,6 +3,16 @@ entries:
   nixos-server:
   - apiVersion: v2
     appVersion: "24.11"
+    created: "2026-01-30T14:38:24.932191363Z"
+    description: A Helm chart for deploying a headless minimal NixOS server pod
+    digest: 3847693dd6de2254aaf7dc13fe9c3582b9ee101184d399db96c37955693494f8
+    name: nixos-server
+    type: application
+    urls:
+    - nixos-server-0.10.0.tgz
+    version: 0.10.0
+  - apiVersion: v2
+    appVersion: "24.11"
     created: "2026-01-30T14:14:42.434734448Z"
     description: A Helm chart for deploying a headless minimal NixOS server pod
     digest: ac199099299a2cbcd8b52497c671ff53b9f7d7b2159d2f4d13c92830e284f19b
@@ -31,4 +41,4 @@ entries:
     urls:
     - nixos-server-0.7.0.tgz
     version: 0.7.0
-generated: "2026-01-30T14:14:42.434745635Z"
+generated: "2026-01-30T14:38:24.93220613Z"
