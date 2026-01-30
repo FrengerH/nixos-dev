@@ -95,8 +95,7 @@ spec:
             mountPath: /opt/start-ssh.sh
             subPath: start-ssh.sh
           - name: ssh-flake
-            mountPath: /opt/ssh-flake/flake.nix
-            subPath: flake.nix
+            mountPath: /opt/ssh-flake
           - name: nixos-flake
             mountPath: /home/{{ .Values.ssh.username }}/nixos-config
           {{- end }}
