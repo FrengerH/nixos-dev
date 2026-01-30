@@ -8,6 +8,7 @@ on:
       - 'Chart.yaml'
       - 'templates/**'
       - 'values.yaml'
+  workflow_dispatch:
 
 jobs:
   release:
