@@ -1,3 +1,4 @@
+# Container image configuration
 image:
   repository: nixos/nix
   tag: latest
