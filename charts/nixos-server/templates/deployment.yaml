@@ -28,25 +28,30 @@ spec:
         {{- else }}
         {{- toYaml .Values.securityContext | nindent 8 }}
         {{- end }}
-      {{- if .Values.persistence.enabled }}
       volumes:
-        {{- if .Values.persistence.nixStore.enabled }}
+        {{- if .Values.persistence.enabled }}
+          {{- if .Values.persistence.nixStore.enabled }}
         - name: nix-store
           persistentVolumeClaim:
             claimName: {{ include "nixos-server.fullname" . }}-nix-store
-        {{- end }}
-        {{- if .Values.persistence.homeDir.enabled }}
+          {{- end }}
+          {{- if .Values.persistence.homeDir.enabled }}
         - name: home-dir
           persistentVolumeClaim:
             claimName: {{ include "nixos-server.fullname" . }}-home-dir
+          {{- end }}
         {{- end }}
         {{- if .Values.ssh.enabled }}
         - name: ssh-script
           configMap:
             name: {{ include "nixos-server.fullname" . }}-ssh-config
             defaultMode: 0755
+        - name: ssh-flake
+          configMap:
+            name: {{ include "nixos-server.fullname" . }}-ssh-config
+        - name: nixos-flake
+          emptyDir: {}
         {{- end }}
-      {{- end }}
       containers:
       - name: {{ .Chart.Name }}
         securityContext:
@@ -74,8 +79,8 @@ spec:
           containerPort: {{ .Values.ssh.port }}
           protocol: TCP
         {{- end }}
-        {{- if .Values.persistence.enabled }}
         volumeMounts:
+          {{- if .Values.persistence.enabled }}
           {{- if .Values.persistence.nixStore.enabled }}
           - name: nix-store
             mountPath: {{ .Values.persistence.nixStore.mountPath }}
@@ -84,12 +89,17 @@ spec:
           - name: home-dir
             mountPath: {{ .Values.persistence.homeDir.mountPath }}
           {{- end }}
+          {{- end }}
           {{- if .Values.ssh.enabled }}
           - name: ssh-script
             mountPath: /opt/start-ssh.sh
             subPath: start-ssh.sh
+          - name: ssh-flake
+            mountPath: /opt/ssh-flake/flake.nix
+            subPath: flake.nix
+          - name: nixos-flake
+            mountPath: /home/{{ .Values.ssh.username }}/nixos-config
           {{- end }}
-        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

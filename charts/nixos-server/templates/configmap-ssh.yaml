@@ -6,38 +6,71 @@ metadata:
   labels:
     {{- include "nixos-server.labels" . | nindent 4 }}
 data:
+  flake.nix: |
+    {
+      description = "NixOS Server SSH Configuration";
+
+      inputs = {
+        nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+      };
+
+      outputs = { self, nixpkgs }:
+        let
+          system = "x86_64-linux";
+          pkgs = nixpkgs.legacyPackages.${system};
+        in {
+          packages.${system} = {
+            ssh-server = pkgs.writeShellApplication {
+              name = "start-ssh";
+              runtimeInputs = with pkgs; [ openssh coreutils ];
+              text = ''
+                set -e
+
+                PORT=${SSH_PORT:-22}
+                USERNAME=${SSH_USERNAME:-nix}
+                PASSWORD_AUTH=${SSH_PASSWORD_AUTH:-"no"}
+
+                mkdir -p /run/sshd
+                mkdir -p /etc/ssh
+
+                cat > /etc/ssh/sshd_config << EOF
+                Port $PORT
+                PermitRootLogin no
+                PasswordAuthentication $PASSWORD_AUTH
+                PubkeyAuthentication yes
+                UsePAM no
+                AllowUsers $USERNAME
+                EOF
+
+                if [ -n "$SSH_AUTHORIZED_KEYS" ]; then
+                  mkdir -p "/home/$USERNAME/.ssh"
+                  echo "$SSH_AUTHORIZED_KEYS" | tr '\n' '\n' > "/home/$USERNAME/.ssh/authorized_keys"
+                  chmod 700 "/home/$USERNAME/.ssh"
+                  chmod 600 "/home/$USERNAME/.ssh/authorized_keys"
+                fi
+
+                echo "SSH server starting on port $PORT..."
+                exec sshd -D -f /etc/ssh/sshd_config
+              '';
+            };
+          };
+
+          defaultPackage.${system} = self.packages.${system}.ssh-server;
+        };
+    }
   start-ssh.sh: |
     #!/bin/sh
     set -e
 
-    nix-env -iA nixpkgs.openssh
-
-    mkdir -p /run/sshd
-
-    if [ -n "{{ .Values.ssh.username }}" ]; then
-      if ! id -u {{ .Values.ssh.username }} >/dev/null 2>&1; then
-        useradd -m -s /bin/sh {{ .Values.ssh.username }}
-      fi
-    fi
-
-    if [ -n "{{ .Values.ssh.password }}" ]; then
-      echo "{{ .Values.ssh.username }}:{{ .Values.ssh.password }}" | chpasswd
-      sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
-      sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
-    else
-      sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
-      sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
-    fi
-
-    {{- range .Values.ssh.authorizedKeys }}
-    mkdir -p /home/{{ $.Values.ssh.username }}/.ssh
-    echo "{{ . }}" >> /home/{{ $.Values.ssh.username }}/.ssh/authorized_keys
+    export SSH_PORT={{ .Values.ssh.port }}
+    export SSH_USERNAME={{ .Values.ssh.username }}
+    {{- if .Values.ssh.password }}
+    export SSH_PASSWORD_AUTH="yes"
+    {{- else }}
+    export SSH_PASSWORD_AUTH="no"
     {{- end }}
+    export SSH_AUTHORIZED_KEYS="{{- range .Values.ssh.authorizedKeys }}{{ . }}{{ end }}"
 
-    chown -R {{ .Values.ssh.username }}:{{ .Values.ssh.username }} /home/{{ $.Values.ssh.username }}/.ssh
-    chmod 700 /home/{{ $.Values.ssh.username }}/.ssh
-    chmod 600 /home/{{ $.Values.ssh.username }}/.ssh/authorized_keys
-
-    echo "SSH server starting on port {{ .Values.ssh.port }}..."
-    /nix/var/nix/profiles/default/bin/sshd -D -p {{ .Values.ssh.port }}
+    cd /opt/ssh-flake
+    exec nix run
 {{- end }}
