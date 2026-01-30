@@ -10,7 +10,7 @@ data:
     #!/bin/sh
     set -e
 
-    apk add --no-cache openssh-server
+    nix-env -iA nixpkgs.openssh
 
     mkdir -p /run/sshd
 
@@ -34,10 +34,10 @@ data:
     echo "{{ . }}" >> /home/{{ $.Values.ssh.username }}/.ssh/authorized_keys
     {{- end }}
 
-    chown -R {{ .Values.ssh.username }}:{{ .Values.ssh.username }} /home/{{ .Values.ssh.username }}/.ssh
-    chmod 700 /home/{{ .Values.ssh.username }}/.ssh
-    chmod 600 /home/{{ .Values.ssh.username }}/.ssh/authorized_keys
+    chown -R {{ .Values.ssh.username }}:{{ .Values.ssh.username }} /home/{{ $.Values.ssh.username }}/.ssh
+    chmod 700 /home/{{ $.Values.ssh.username }}/.ssh
+    chmod 600 /home/{{ $.Values.ssh.username }}/.ssh/authorized_keys
 
     echo "SSH server starting on port {{ .Values.ssh.port }}..."
-    /usr/sbin/sshd -D -p {{ .Values.ssh.port }}
+    /nix/var/nix/profiles/default/bin/sshd -D -p {{ .Values.ssh.port }}
 {{- end }}
